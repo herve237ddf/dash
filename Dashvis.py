@@ -21,7 +21,11 @@ Importez un fichier **CSV** pour générer automatiquement un tableau de bord in
 uploaded_file = st.file_uploader("📁 Téléchargez un fichier CSV", type=["csv"])
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file)
+        # Lecture avec gestion automatique du séparateur
+        df = pd.read_csv(uploaded_file, sep=",")
+        if df.shape[1] == 1:
+            df = pd.read_csv(uploaded_file, sep=";")
+
         st.success("✅ Fichier chargé avec succès !")
 
         # Aperçu
@@ -46,8 +50,9 @@ if uploaded_file:
         if categorical_cols:
             cat_col = st.selectbox("Choisissez une colonne **catégorielle** :", categorical_cols)
             data_cat = df[cat_col].value_counts().reset_index()
-            fig_cat = px.bar(data_cat, x='index', y=cat_col,
-                             labels={'index': cat_col, cat_col: "Nombre"},
+            data_cat.columns = [cat_col, "count"]  # renommer pour éviter 'index'
+            fig_cat = px.bar(data_cat, x=cat_col, y="count",
+                             labels={cat_col: cat_col, "count": "Nombre"},
                              title=f"Répartition des valeurs de {cat_col}")
             st.plotly_chart(fig_cat, use_container_width=True)
             figs.append(fig_cat)
